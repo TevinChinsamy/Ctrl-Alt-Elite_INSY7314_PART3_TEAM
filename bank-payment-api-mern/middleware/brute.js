@@ -14,25 +14,59 @@ import mongoose from 'mongoose';
  * - NIST SP 800-63B Section 5.2.2
  */
 
-// Define brute force attempt schema
-const bruteForceSchema = new mongoose.Schema({
-  _id: String,
-  data: {
-    count: Number,
-    lastRequest: Date,
-    firstRequest: Date
-  },
-  expires: { type: Date, index: { expires: '1d' } }
-});
+// Simple in-memory store used for tests/CI or when Mongo is not configured
+class MemoryStore {
+  constructor() {
+    this._data = new Map();
+  }
 
-// Avoid OverwriteModelError in test/require cycles
-const BruteForceModel =
-  mongoose.models && mongoose.models.BruteForce
-    ? mongoose.models.BruteForce
-    : mongoose.model('BruteForce', bruteForceSchema);
+  get(key, cb) {
+    cb(null, this._data.get(key));
+  }
 
-// Create MongoDB store for persistence
-const store = new MongooseStore(BruteForceModel);
+  set(key, value, lifetime, cb) {
+    this._data.set(key, value);
+    if (cb) cb(null);
+  }
+
+  reset(key, cb) {
+    this._data.delete(key);
+    if (cb) cb(null);
+  }
+}
+
+// Decide whether to use Mongo-backed store or in-memory
+const shouldUseMongoStore =
+  process.env.NODE_ENV !== 'test' &&
+  !process.env.CI &&
+  !!process.env.MONGODB_URI;
+
+let store;
+
+if (shouldUseMongoStore) {
+  // Define brute force attempt schema
+  const bruteForceSchema = new mongoose.Schema({
+    _id: String,
+    data: {
+      count: Number,
+      lastRequest: Date,
+      firstRequest: Date
+    },
+    expires: { type: Date, index: { expires: '1d' } }
+  });
+
+  // Avoid OverwriteModelError in test/require cycles
+  const BruteForceModel =
+    mongoose.models && mongoose.models.BruteForce
+      ? mongoose.models.BruteForce
+      : mongoose.model('BruteForce', bruteForceSchema);
+
+  // Create MongoDB store for persistence
+  store = new MongooseStore(BruteForceModel);
+} else {
+  // Use in-memory store in tests/CI or when MONGODB_URI is not set
+  store = new MemoryStore();
+}
 
 /**
  * Strict Login Brute Force Protection
@@ -57,7 +91,8 @@ export const loginBruteForce = new ExpressBrute(store, {
   },
 
   handleStoreError: function (error) {
-    console.error('Express-brute store error:', error);
+    const message = error && error.message ? error.message : String(error);
+    console.error('Express-brute store error:', message);
 
     // Fail open in case of database issues (security vs availability tradeoff)
     // In test/CI we *definitely* don't want this to crash the whole test run.
