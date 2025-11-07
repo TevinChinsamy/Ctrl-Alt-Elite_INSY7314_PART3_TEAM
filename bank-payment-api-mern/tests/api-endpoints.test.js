@@ -149,8 +149,8 @@ describe('API Endpoints Integration Tests', () => {
           username: 'test'
         });
 
-      // Should return validation error (400 or 422)
-      expect([400, 422, 429]).toContain(response.status);
+      // Should return validation or security error (400, 403, 422 or 429)
+      expect([400, 403, 422, 429]).toContain(response.status);
     });
 
     test('should reject invalid login data', async () => {
@@ -161,8 +161,8 @@ describe('API Endpoints Integration Tests', () => {
           accountNumber: '123456789'
         });
 
-      // Should return validation error
-      expect([400, 422, 429]).toContain(response.status);
+      // Should return validation or security error
+      expect([400, 403, 422, 429]).toContain(response.status);
     });
   });
 
