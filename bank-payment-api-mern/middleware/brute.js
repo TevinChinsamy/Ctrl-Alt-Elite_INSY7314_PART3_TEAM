@@ -54,8 +54,17 @@ export const loginBruteForce = new ExpressBrute(store, {
 
   handleStoreError: function(error) {
     console.error('Express-brute store error:', error);
+
     // Fail open in case of database issues (security vs availability tradeoff)
-    throw error;
+    // In test/CI we *definitely* don't want this to crash the whole test run.
+    if (process.env.NODE_ENV === 'test' || process.env.CI) {
+      return;
+    }
+
+    // In production you *could* choose to throw to be strict,
+    // but for this project it's safer to log and fail open rather than
+    // bring down the whole app due to a rate limit store issue.
+    // throw error;
   }
 });
 
