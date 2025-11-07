@@ -141,13 +141,13 @@ describe('InputValidator', () => {
     });
   });
 
-  describe('sanitizeInput', () => {
-    test('should remove dangerous characters', () => {
-      expect(validator.sanitizeInput('Normal text')).toBe('Normal text');
-      expect(validator.sanitizeInput('<script>alert("xss")</script>')).toBe('scriptalert"xss"/script');
-      expect(validator.sanitizeInput('Hello & goodbye')).toBe('Hello  goodbye');
-      expect(validator.sanitizeInput('Test (parentheses)')).toBe('Test parentheses');
-    });
+ test('should remove dangerous characters', () => {
+  expect(validator.sanitizeInput('Normal text')).toBe('Normal text');
+  expect(validator.sanitizeInput('<script>alert("xss")</script>')).toBe('alert"xss"');
+  expect(validator.sanitizeInput('Hello & goodbye')).toBe('Hello  goodbye');
+  expect(validator.sanitizeInput('Test (parentheses)')).toBe('Test parentheses');
+});
+
 
     test('should handle empty strings', () => {
       expect(validator.sanitizeInput('')).toBe('');
