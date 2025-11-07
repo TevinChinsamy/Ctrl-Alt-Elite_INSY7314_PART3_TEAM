@@ -131,7 +131,7 @@ describe('InputValidator', () => {
   describe('isValidBankName', () => {
     test('should accept valid bank names', () => {
       expect(validator.isValidBankName('Chase Bank')).toBe(true);
-      expect(validator.isValidBankName("Bank of America")).toBe(true);
+      expect(validator.isValidBankName('Bank of America')).toBe(true);
       expect(validator.isValidBankName('Wells Fargo & Co')).toBe(true);
     });
 
@@ -141,13 +141,13 @@ describe('InputValidator', () => {
     });
   });
 
- test('should remove dangerous characters', () => {
-  expect(validator.sanitizeInput('Normal text')).toBe('Normal text');
-  expect(validator.sanitizeInput('<script>alert("xss")</script>')).toBe('alert"xss"');
-  expect(validator.sanitizeInput('Hello & goodbye')).toBe('Hello  goodbye');
-  expect(validator.sanitizeInput('Test (parentheses)')).toBe('Test parentheses');
-});
-
+  describe('sanitizeInput', () => {
+    test('should remove dangerous characters', () => {
+      expect(validator.sanitizeInput('Normal text')).toBe('Normal text');
+      expect(validator.sanitizeInput('<script>alert("xss")</script>')).toBe('alert"xss"');
+      expect(validator.sanitizeInput('Hello & goodbye')).toBe('Hello  goodbye');
+      expect(validator.sanitizeInput('Test (parentheses)')).toBe('Test parentheses');
+    });
 
     test('should handle empty strings', () => {
       expect(validator.sanitizeInput('')).toBe('');
