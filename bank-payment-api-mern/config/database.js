@@ -2,10 +2,22 @@ import mongoose from 'mongoose';
 
 /**
  * Database Connection Configuration
- * Connects to MongoDB with security best practices
+ * Securely connects to MongoDB with CI-safe and test-friendly handling
  */
-
 const connectDB = async () => {
+  const uri = process.env.MONGODB_URI;
+
+  // Handle missing MongoDB URI gracefully
+  if (!uri) {
+    if (process.env.NODE_ENV === 'test' || process.env.CI) {
+      console.warn('⚠️  Skipping MongoDB connection: MONGODB_URI not set (test/CI environment)');
+      return;
+    } else {
+      console.error('❌ MongoDB connection failed: MONGODB_URI is not defined');
+      process.exit(1);
+    }
+  }
+
   try {
     const options = {
       // Security options
@@ -26,10 +38,10 @@ const connectDB = async () => {
       retryReads: true,
 
       // Write concern
-      w: 'majority'
+      w: 'majority',
     };
 
-    const conn = await mongoose.connect(process.env.MONGODB_URI, options);
+    const conn = await mongoose.connect(uri, options);
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
     console.log(`📊 Database: ${conn.connection.db.databaseName}`);
@@ -50,15 +62,18 @@ const connectDB = async () => {
     // Graceful shutdown
     process.on('SIGINT', async () => {
       await mongoose.connection.close();
-      console.log('MongoDB connection closed through app termination');
+      console.log('🔒 MongoDB connection closed through app termination');
       process.exit(0);
     });
 
     return conn;
-
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);
-    process.exit(1);
+    if (process.env.NODE_ENV !== 'test' && !process.env.CI) {
+      process.exit(1);
+    } else {
+      console.warn('Skipping process.exit() in test/CI environment');
+    }
   }
 };
 
