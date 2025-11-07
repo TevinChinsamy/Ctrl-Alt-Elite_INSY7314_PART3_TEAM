@@ -148,21 +148,26 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('Global error handler:', err);
+  // Log only the message (avoid circular structures from req/res)
+  console.error(
+    'Global error handler:',
+    err && err.message ? err.message : String(err)
+  );
 
   // CORS error
-  if (err.message === 'Not allowed by CORS') {
+  if (err && err.message === 'Not allowed by CORS') {
     return res.status(403).json({
       success: false,
       message: 'CORS policy violation'
     });
   }
 
-  res.status(err.status || 500).json({
+  res.status((err && err.status) || 500).json({
     success: false,
-    message: process.env.NODE_ENV === 'production'
-      ? 'Internal server error'
-      : err.message
+    message:
+      process.env.NODE_ENV === 'production'
+        ? 'Internal server error'
+        : (err && err.message) || 'Unknown error'
   });
 });
 
@@ -216,7 +221,9 @@ if (isDevelopment && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
     console.log(`🛡️  TLS Version: 1.2 & 1.3 only`);
     console.log(`🔐 Strong cipher suites enabled`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📡 CORS enabled for: ${process.env.ALLOWED_ORIGINS || 'localhost:3000'}`);
+    console.log(
+      `📡 CORS enabled for: ${process.env.ALLOWED_ORIGINS || 'localhost:3000'}`
+    );
     console.log(`✅ HSTS, CSP, and security headers active\n`);
   });
 } else {
@@ -224,7 +231,9 @@ if (isDevelopment && fs.existsSync(certPath) && fs.existsSync(keyPath)) {
   app.listen(PORT, () => {
     console.log(`\n🚀 HTTP Server running on http://localhost:${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`📡 CORS enabled for: ${process.env.ALLOWED_ORIGINS || 'localhost:3000'}`);
+    console.log(
+      `📡 CORS enabled for: ${process.env.ALLOWED_ORIGINS || 'localhost:3000'}`
+    );
     if (isDevelopment) {
       console.log(`⚠️  No HTTPS certificates found. Using HTTP for development.`);
       console.log(`   Run: npm run generate-certs`);
