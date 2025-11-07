@@ -33,7 +33,6 @@ jobs:
         working-directory: bank-payment-api-mern
         run: npm install
 
-
       - name: Install frontend dependencies
         working-directory: bank-payment-frontend
         run: npm ci
@@ -73,7 +72,7 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: bank-payment-api-mern
-        run: npm ci
+        run: npm install
 
       - name: Backend dependency audit (High & Critical)
         working-directory: bank-payment-api-mern
@@ -150,7 +149,7 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: bank-payment-api-mern
-        run: npm ci
+        run: npm install
 
       - name: Create test environment file
         working-directory: bank-payment-api-mern
